@@ -1,7 +1,7 @@
 YAEST (Yet Another Emacs like Sublime Text)
 ===========================================
 
-This is Sublime Text 2 Plugin for Emacs like keymap.
+This is Sublime Text 2/3 Plugin for Emacs like keymap.
 This plugin intended to emulate Emacs's
 [Transient Mark Mode](http://www.emacswiki.org/emacs/TransientMarkMode).
 

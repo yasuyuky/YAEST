@@ -1,4 +1,8 @@
 import sublime_plugin, sublime
+import sys
+
+PY2 = sys.version_info < (3, 0)
+if not PY2: xrange = range
 
 class KillRing:
     def __init__(self):
