@@ -1,0 +1,4 @@
+[
+    { "keys": ["ctrl+`"], "command": "toggle_transient_mark" },
+    { "keys": ["ctrl+shift+`"], "command": "show_panel", "args": {"panel": "console", "toggle": true} }
+]

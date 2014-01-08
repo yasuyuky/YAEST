@@ -1,0 +1,5 @@
+[
+    {"command": "move", "args": {"by": "words", "forward": false, "extend": true}},
+    {"command": "add_to_kill_ring_clip", "args": {"forward": false}},
+    {"command": "left_delete"}
+]
