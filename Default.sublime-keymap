@@ -191,6 +191,6 @@
     { "keys": ["ctrl+shift+."], "command": "find_under_expand" } ,
     { "keys": ["ctrl+shift+,"], "command": "select_lines", "args": {"forward": false} ,"context":[{"key":"selection_empty"}]},
     { "keys": ["ctrl+shift+."], "command": "select_lines", "args": {"forward": true} ,"context":[{"key":"selection_empty"}]},
-    { "keys": ["ctrl+c","ctrl+shift+,"], "command": "find_all_under" },
+    { "keys": ["ctrl+c","ctrl+shift+,"], "command": "find_all_under" }
 
 ]
