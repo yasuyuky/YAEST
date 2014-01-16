@@ -1,0 +1,4 @@
+[
+    {"command": "add_to_kill_ring_clip", "args": {"forward": true}},
+    {"command": "right_delete"}
+]

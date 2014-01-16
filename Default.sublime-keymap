@@ -4,7 +4,7 @@
     // emacs like mark kill yank
     { "keys": ["ctrl+@"], "command": "toggle_transient_mark" },
     { "keys": ["ctrl+k"], "command": "run_macro_file", "args": {"file": "Packages/YAEST/kill_line.sublime-macro"} },
-    { "keys": ["ctrl+w"], "command": "delete_to_mark" },
+    { "keys": ["ctrl+w"], "command": "run_macro_file", "args": {"file":"Packages/YAEST/kill_region.sublime-macro"}},
     { "keys": ["ctrl+w"], "command": "run_macro_file", "args": {"file":"Packages/YAEST/kill_oneword.sublime-macro"}, "context":[{"key":"selection_empty"}]},
     { "keys": ["escape","w"], "command": "run_macro_file", "args": {"file": "Packages/YAEST/add_to_killring.sublime-macro"} },
     { "keys": ["alt+w"], "command": "run_macro_file", "args": {"forward": "Packages/YAEST/add_to_killring.sublime-macro"} },
