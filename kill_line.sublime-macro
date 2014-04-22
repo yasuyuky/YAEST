@@ -1,4 +1,5 @@
 [
+    {"command": "block_sealing"},
     {"command": "move_to", "args": {"to": "hardeol", "extend": true}},
     {"command": "add_to_kill_ring_clip", "args": {"forward": true}},
     {"command": "right_delete"}

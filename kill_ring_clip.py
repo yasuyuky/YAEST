@@ -7,122 +7,96 @@ if not PY2: xrange = range
 class KillRing:
     def __init__(self):
         self.limit = 16
-        self.buffer = [None for i in xrange(self.limit)]
-        self.head = 0
-        self.len = 0
-        self.kill_points = []
-        self.kill_id = 0
+        self.buffer = []
+        self.sealed = True
+        self.blocker = 0
 
     def top(self):
-        return self.buffer[self.head]
+        return self.buffer[-1] if self.buffer else ''
 
     def seal(self):
-        self.kill_points = []
-        self.kill_id = 0
-
-    def push(self, text):
-        self.head = (self.head + 1) % self.limit
-        self.buffer[self.head] = text
-        if self.len < self.limit:
-            self.len += 1
-
-    def add(self, view_id, text, regions, forward):
-        if view_id != self.kill_id:
-            # view has changed, ensure the last kill ring entry will not be
-            # appended to
-            self.seal()
-
-        begin_points = []
-        end_points = []
-        for r in regions:
-            begin_points.append(r.begin())
-            end_points.append(r.end())
-
-        if forward:
-            compare_points = begin_points
+        if self.blocker == 0:
+            self.sealed = True
         else:
-            compare_points = end_points
+            self.blocker -= 1
 
-        if compare_points == self.kill_points:
-            # Selection hasn't moved since the last kill, append/prepend the
-            # text to the current entry
-            if forward:
-                self.buffer[self.head] = self.buffer[self.head] + text
-            else:
-                self.buffer[self.head] = text + self.buffer[self.head]
+    def increment_brocker(self):
+        self.blocker += 1
+
+    def push(self, texts):
+        self.buffer.append(texts)
+        if len(self.buffer) > self.limit: del self.buffer[0]
+        self.sealed = False
+        sublime.set_clipboard('\n'.join(texts))
+
+    def put(self, texts, forward):
+        if self.sealed or not self.buffer:
+            self.push(texts)
         else:
-            # Create a new entry in the kill ring for this text
-            self.push(text)
+            self.update(texts, forward)
 
-        self.kill_points = begin_points
-        self.kill_id = view_id
-
-    def get(self, index):
-        return self.buffer[(self.head + index) % self.limit]
+    def update(self,texts,forward):
+        concat = lambda t:t[0]+(t[1] or '') if forward else (t[1] or '') + t[0]
+        new_texts = [concat(t) for t in zip(self.buffer[-1],texts)]
+        del self.buffer[-1]
+        self.push(new_texts)
 
     def __len__(self):
-        return self.len
+        return len(self.buffer)
+
 
 kill_ring = KillRing()
+
 
 class YankAnotherCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         kill_ring.seal()
-        text = kill_ring.top()
-
-        lines = text.splitlines()
-
+        texts = kill_ring.top()
         regions = [r for r in self.view.sel()]
-        regions.reverse()
-
-        if len(regions) > 1 and len(regions) == len(lines):
-            # insert one line from the top of the kill ring at each
-            # corresponding selection
-            lines.reverse()
-            for i in xrange(len(regions)):
-                s = regions[i]
-                line = lines[i]
-                num = self.view.insert(edit, s.begin(), line)
-                self.view.erase(edit, sublime.Region(s.begin() + num,
-                    s.end() + num))
+        if len(texts) == len(regions):
+            for r,t in reversed(zip(regions,texts)):
+                num = self.view.insert(edit, r.begin(), t)
+                self.view.erase(edit, sublime.Region(r.begin()+num, r.end()+num))
         else:
-            # insert the top of the kill ring at each selection
-            for s in regions:
-                num = self.view.insert(edit, s.begin(), text)
-                self.view.erase(edit, sublime.Region(s.begin() + num,
-                    s.end() + num))
+            t = '\n'.join(texts)
+            for r in reversed(regions):
+                num = self.view.insert(edit, r.begin(), t)
+                self.view.erase(edit, sublime.Region(r.begin()+num, r.end()+num))
 
     def is_enabled(self):
         return len(kill_ring) > 0
 
-last_clip=''
 
 class AddToKillRingClipCommand(sublime_plugin.TextCommand):
     def run(self, edit, forward):
-        global last_clip
         delta = 1
         if not forward:
             delta = -1
-
-        text = []
+        texts = []
         regions = []
         for s in self.view.sel():
-            if s.empty():
-                s = sublime.Region(s.a, s.a + delta)
-            text.append(self.view.substr(s))
-            regions.append(s)
+            if s.empty(): s = sublime.Region(s.a, s.a + delta)
+            texts.append(self.view.substr(s))
 
-        clip = '\n'.join(text)
-        kill_ring.add(self.view.id(), clip, regions, forward)
-        sublime.set_clipboard(clip)
-        last_clip = kill_ring.top()
+        clip = '\n'.join(texts)
+        kill_ring.put(texts, forward)
+
+
+class BlockSealingCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        for _ in self.view.sel():
+            kill_ring.increment_brocker()
+
+
+class CursorListener(sublime_plugin.EventListener):
+    def on_selection_modified(self, view):
+        kill_ring.seal()
+
 
 class ClipboardListener(sublime_plugin.EventListener):
-
-    def on_selection_modified(self, view):
-        global last_clip
+    def on_activated(self, view):
         clip = sublime.get_clipboard()
-        if clip != last_clip:
+        if '\n'.join(kill_ring.top()) != clip:
+            kill_ring.push([clip])
             print("kill ring overridden", clip)
-            kill_ring.add(view.id(), clip, view.sel(), 1)
-            last_clip = clip
+

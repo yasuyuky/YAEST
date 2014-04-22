@@ -1,4 +1,5 @@
 [
     {"command": "add_to_kill_ring_clip", "args": {"forward": true}},
-    {"command": "right_delete"}
+    {"command": "right_delete"},
+    {"command": "cancel_transient_mark"}
 ]
